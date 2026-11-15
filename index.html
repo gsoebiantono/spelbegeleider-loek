@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Spelbegeleider">
+<meta name="theme-color" content="#0b1d33">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>Spelbegeleider Loek</title>
+<style>
+:root{
+  --bg:#0b1d33; --card:#14304f; --card2:#1b3d63; --text:#f3f7fb; --muted:#93a9c2;
+  --wij:#2ecc71; --zij:#ff7a59; --accent:#ffd23f; --danger:#ff5a5f;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Helvetica,Arial,sans-serif;overscroll-behavior:none}
+body{padding:env(safe-area-inset-top) 14px calc(env(safe-area-inset-bottom) + 10px)}
+button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulation}
+.app{max-width:560px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;gap:12px;padding-top:10px}
+header{display:flex;align-items:center;justify-content:space-between}
+header h1{font-size:15px;margin:0;color:var(--muted);font-weight:600;letter-spacing:.03em}
+.tabs{display:flex;gap:6px}
+.tab{background:var(--card);padding:8px 14px;border-radius:999px;font-size:14px;color:var(--muted)}
+.tab.on{background:var(--accent);color:#1a1a1a;font-weight:700}
+.view{display:none;flex-direction:column;gap:12px;flex:1}
+.view.on{display:flex}
+
+/* klok */
+.clock{background:var(--card);border-radius:22px;padding:14px 16px 16px;text-align:center}
+.phase{font-size:17px;font-weight:700;color:var(--accent);min-height:24px}
+.time{font-size:84px;font-weight:800;line-height:1.02;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.time.rest{color:var(--muted)}
+.time.low{color:var(--danger)}
+.banner{display:none;margin:8px 0 2px;padding:10px;border-radius:12px;background:var(--danger);font-weight:800;font-size:18px}
+.banner.on{display:block;animation:flash .8s linear infinite}
+@keyframes flash{50%{opacity:.55}}
+.crow{display:flex;gap:10px;margin-top:10px}
+.btn{flex:1;padding:16px 10px;border-radius:16px;background:var(--card2);font-size:18px;font-weight:700}
+.btn.main{background:var(--accent);color:#1a1a1a;flex:2;font-size:22px}
+.btn.small{white-space:nowrap;font-size:14px;padding:11px;font-weight:600;color:var(--muted)}
+.btn.danger{background:var(--danger);color:#fff}
+.dots{display:flex;gap:6px;justify-content:center;margin-top:12px}
+.dot{width:34px;height:6px;border-radius:3px;background:var(--card2)}
+.dot.done{background:var(--accent)}
+.dot.cur{background:#fff}
+
+/* score */
+.score{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.team{border-radius:22px;padding:12px 10px 12px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+.team.wij{background:var(--wij);color:#06301a}
+.team.zij{background:var(--zij);color:#3a1204}
+.team .lbl{font-size:18px;font-weight:800;letter-spacing:.08em}
+.team .num{font-size:96px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
+.team .plus{width:100%;padding:22px 0;border-radius:16px;font-size:28px;font-weight:900;background:rgba(0,0,0,.18);color:inherit}
+.team .plus:active{background:rgba(0,0,0,.35)}
+.team .minus{background:transparent;font-size:14px;font-weight:700;color:inherit;opacity:.75;padding:6px 14px}
+.log{background:var(--card);border-radius:18px;padding:12px 14px}
+.log h2{margin:0 0 6px;font-size:13px;color:var(--muted);font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+.log ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.log li{display:flex;justify-content:space-between;font-size:16px;font-variant-numeric:tabular-nums}
+.log .none{color:var(--muted);font-size:15px}
+.tw{color:var(--wij);font-weight:700}.tz{color:var(--zij);font-weight:700}
+
+/* acties */
+.footer{display:flex;gap:10px}
+
+/* historie */
+.card{background:var(--card);border-radius:18px;padding:14px 16px}
+.hist{display:flex;flex-direction:column;gap:10px}
+.hitem{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.hitem .t{font-weight:700;font-size:16px}
+.hitem .d{color:var(--muted);font-size:13px}
+.hitem .s{font-size:24px;font-weight:900;font-variant-numeric:tabular-nums}
+.hitem .x{background:transparent;color:var(--muted);font-size:20px;padding:6px 10px}
+.empty{color:var(--muted);text-align:center;padding:30px 0}
+.res{font-size:12px;font-weight:800;padding:2px 8px;border-radius:8px;margin-left:6px;color:#111}
+.res.w{background:var(--wij)}.res.g{background:var(--accent)}.res.v{background:var(--zij)}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:flex-end;justify-content:center;z-index:10}
+.modal.on{display:flex}
+.sheet{background:var(--card);width:100%;max-width:560px;border-radius:24px 24px 0 0;padding:20px 18px calc(env(safe-area-inset-bottom) + 18px);display:flex;flex-direction:column;gap:12px}
+.sheet h3{margin:0;font-size:20px}
+.sheet p{margin:0;color:var(--muted);font-size:15px}
+.sheet .big{font-size:40px;font-weight:900;text-align:center;font-variant-numeric:tabular-nums}
+.sheet label{font-size:13px;color:var(--muted);font-weight:600}
+.sheet input{width:100%;font:inherit;font-size:18px;padding:13px;border-radius:12px;border:2px solid var(--card2);background:var(--bg);color:var(--text);-webkit-user-select:text;user-select:text}
+.sheet .crow{margin-top:4px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Park16Hoven JO9-5</h1>
+    <div class="tabs">
+      <button class="tab on" data-tab="match">Wedstrijd</button>
+      <button class="tab" data-tab="hist">Historie</button>
+    </div>
+  </header>
+
+  <!-- WEDSTRIJD -->
+  <section class="view on" id="v-match">
+    <div class="clock">
+      <div class="phase" id="phase"></div>
+      <div class="time" id="time">10:00</div>
+      <div class="banner" id="banner"></div>
+      <div class="crow">
+        <button class="btn small" id="skip">Volgende</button>
+        <button class="btn main" id="startstop">Start</button>
+        <button class="btn small" id="adj">±1 min</button>
+      </div>
+      <div class="dots" id="dots"></div>
+    </div>
+
+    <div class="score">
+      <div class="team wij">
+        <div class="lbl">WIJ</div>
+        <div class="num" id="nWij">0</div>
+        <button class="plus" data-add="wij">+1</button>
+        <button class="minus" data-sub="wij">− fout</button>
+      </div>
+      <div class="team zij">
+        <div class="lbl">ZIJ</div>
+        <div class="num" id="nZij">0</div>
+        <button class="plus" data-add="zij">+1</button>
+        <button class="minus" data-sub="zij">− fout</button>
+      </div>
+    </div>
+
+    <div class="log">
+      <h2>Doelpunten</h2>
+      <ul id="log"></ul>
+    </div>
+
+    <div class="footer">
+      <button class="btn small" id="reset">Nieuwe wedstrijd</button>
+      <button class="btn" id="save">Opslaan</button>
+    </div>
+  </section>
+
+  <!-- HISTORIE -->
+  <section class="view" id="v-hist">
+    <div class="card hist" id="hist"></div>
+  </section>
+</div>
+
+<!-- tijd-aanpassing -->
+<div class="modal" id="mAdj"><div class="sheet">
+  <h3>Klok bijstellen</h3>
+  <p>Bijvoorbeeld als je te laat op start drukte.</p>
+  <div class="crow">
+    <button class="btn" data-adj="-60">− 1 min</button>
+    <button class="btn" data-adj="-10">− 10 sec</button>
+    <button class="btn" data-adj="10">+ 10 sec</button>
+    <button class="btn" data-adj="60">+ 1 min</button>
+  </div>
+  <button class="btn main" data-close>Klaar</button>
+</div></div>
+
+<!-- opslaan -->
+<div class="modal" id="mSave"><div class="sheet">
+  <h3>Wedstrijd opslaan</h3>
+  <div class="big" id="saveScore">0 – 0</div>
+  <div><label for="opp">Tegenstander</label><input id="opp" placeholder="bijv. SV Voorbeeld JO9-2" autocomplete="off"></div>
+  <div><label for="dt">Datum</label><input id="dt" type="date"></div>
+  <div class="crow">
+    <button class="btn small" data-close>Annuleer</button>
+    <button class="btn main" id="doSave">Opslaan</button>
+  </div>
+</div></div>
+
+<!-- nieuwe wedstrijd -->
+<div class="modal" id="mReset"><div class="sheet">
+  <h3>Nieuwe wedstrijd starten?</h3>
+  <p>De huidige stand en klok worden gewist. Heb je hem nog niet opgeslagen, dan ben je hem kwijt.</p>
+  <div class="crow">
+    <button class="btn small" data-close>Annuleer</button>
+    <button class="btn danger" id="doReset">Wis en begin opnieuw</button>
+  </div>
+</div></div>
+
+<script>
+(function(){
+  'use strict';
+  // ---- fases: kwart 1-4 en pauzes (minuten) ----
+  var PHASES = [
+    {name:'Kwart 1', min:10, q:1},
+    {name:'Pauze', min:2, rest:true},
+    {name:'Kwart 2', min:10, q:2},
+    {name:'Pauze (rust)', min:10, rest:true},
+    {name:'Kwart 3', min:10, q:3},
+    {name:'Pauze', min:2, rest:true},
+    {name:'Kwart 4', min:10, q:4}
+  ];
+  var KEY_STATE='spelbegeleider.state.v1', KEY_HIST='spelbegeleider.hist.v1';
+
+  function fresh(){ return {phase:0, running:false, endAt:0, remaining:PHASES[0].min*60000, wij:0, zij:0, goals:[], finished:false, alert:''}; }
+  function load(k, d){ try{ var v=JSON.parse(localStorage.getItem(k)); return v||d; }catch(e){ return d; } }
+  function store(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+
+  var S = load(KEY_STATE, null);
+  if(!S || typeof S.phase!=='number' || S.phase<0 || S.phase>=PHASES.length) S = fresh();
+  var hist = load(KEY_HIST, []);
+  if(!Array.isArray(hist)) hist=[];
+
+  var $ = function(id){ return document.getElementById(id); };
+  function persist(){ store(KEY_STATE, S); }
+
+  // ---- klok ----
+  function remainingMs(){ return S.running ? Math.max(0, S.endAt - Date.now()) : S.remaining; }
+  function fmt(ms){
+    var s = Math.ceil(ms/1000); if(s<0) s=0;
+    var m=Math.floor(s/60), r=s%60;
+    return (m<10?'0':'')+m+':'+(r<10?'0':'')+r;
+  }
+  function beep(){
+    try{
+      var C = window.AudioContext||window.webkitAudioContext; if(!C) return;
+      var ctx = new C(), t=ctx.currentTime;
+      [0,0.35,0.7].forEach(function(o){
+        var os=ctx.createOscillator(), g=ctx.createGain();
+        os.frequency.value=880; os.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.25,t+o); g.gain.exponentialRampToValueAtTime(0.001,t+o+0.25);
+        os.start(t+o); os.stop(t+o+0.26);
+      });
+    }catch(e){}
+    try{ if(navigator.vibrate) navigator.vibrate([200,100,200]); }catch(e){}
+  }
+  function gotoPhase(i, msg){
+    S.phase=i; S.running=false; S.endAt=0;
+    S.remaining = PHASES[i].min*60000;
+    S.alert = msg||'';
+  }
+  function phaseEnded(){
+    var cur=PHASES[S.phase];
+    beep();
+    if(S.phase>=PHASES.length-1){
+      S.running=false; S.remaining=0; S.finished=true; S.alert='EINDSTAND – wedstrijd afgelopen';
+    } else {
+      var nxt=PHASES[S.phase+1];
+      gotoPhase(S.phase+1, cur.name+' afgelopen – klaar voor '+nxt.name);
+    }
+    persist(); render();
+  }
+  function tick(){
+    if(S.running && Date.now()>=S.endAt) phaseEnded(); else renderTime();
+  }
+  function startStop(){
+    if(S.finished) return;
+    if(S.running){ S.remaining=Math.max(0,S.endAt-Date.now()); S.running=false; }
+    else { S.endAt=Date.now()+S.remaining; S.running=true; S.alert=''; wake(); }
+    persist(); render();
+  }
+  function skip(){
+    if(S.finished) return;
+    if(S.phase>=PHASES.length-1){ S.running=false; S.remaining=0; S.finished=true; S.alert='EINDSTAND – wedstrijd afgelopen'; }
+    else gotoPhase(S.phase+1,'');
+    persist(); render();
+  }
+  function adjust(sec){
+    if(S.finished) return;
+    var max=PHASES[S.phase].min*60000;
+    var r=Math.min(max, Math.max(1000, remainingMs()+sec*1000));
+    if(S.running) S.endAt=Date.now()+r; else S.remaining=r;
+    persist(); render();
+  }
+
+  // ---- score ----
+  function curQuarterInfo(){
+    // laatste kwart waarin we zitten; in pauze: kwart dat net afgelopen is
+    var i=S.phase, p=PHASES[i];
+    if(p.q){
+      var el=PHASES[i].min*60000-remainingMs();
+      return {q:p.q, min:Math.min(p.min, Math.floor(el/60000)+1)};
+    }
+    var prev=PHASES[Math.max(0,i-1)];
+    return {q:prev.q||1, min:prev.min};
+  }
+  function addGoal(team){
+    var info=curQuarterInfo();
+    S[team]++;
+    S.goals.push({team:team,q:info.q,min:info.min,wij:S.wij,zij:S.zij});
+    persist(); render();
+  }
+  function subGoal(team){
+    if(S[team]<=0) return;
+    S[team]--;
+    for(var i=S.goals.length-1;i>=0;i--){ if(S.goals[i].team===team){ S.goals.splice(i,1); break; } }
+    // stand in log opnieuw berekenen
+    var w=0,z=0; S.goals.forEach(function(g){ if(g.team==='wij')w++; else z++; g.wij=w; g.zij=z; });
+    persist(); render();
+  }
+
+  // ---- render ----
+  function renderTime(){
+    var ms=remainingMs(), p=PHASES[S.phase];
+    $('time').textContent=fmt(ms);
+    $('time').className='time'+(p.rest?' rest':'')+(!p.rest&&S.running&&ms<=30000?' low':'');
+  }
+  function render(){
+    var p=PHASES[S.phase];
+    $('phase').textContent = S.finished ? 'Wedstrijd afgelopen' : p.name + (S.running?'':' – klok staat stil');
+    renderTime();
+    var b=$('banner'); b.textContent=S.alert; b.className='banner'+(S.alert?' on':'');
+    var ss=$('startstop');
+    ss.textContent = S.finished ? 'Klaar' : S.running ? 'Pauze' : (S.remaining<p.min*60000 ? 'Hervat' : 'Start '+(p.rest?'pauze':p.name.toLowerCase()));
+    ss.disabled=S.finished; ss.style.opacity=S.finished?.4:1;
+    $('nWij').textContent=S.wij; $('nZij').textContent=S.zij;
+    // voortgang: 4 kwarten
+    var dots='';
+    for(var q=1;q<=4;q++){
+      var idx=PHASES.findIndex(function(x){return x.q===q;});
+      var cls = (S.finished||S.phase>idx)?'done':(S.phase===idx?'cur':'');
+      dots+='<div class="dot '+cls+'"></div>';
+    }
+    $('dots').innerHTML=dots;
+    var ul=$('log');
+    if(!S.goals.length) ul.innerHTML='<li class="none">Nog geen doelpunten</li>';
+    else ul.innerHTML=S.goals.slice().reverse().map(function(g){
+      var who=g.team==='wij'?'<span class="tw">WIJ</span>':'<span class="tz">ZIJ</span>';
+      return '<li><span>K'+g.q+' · '+g.min+'\'</span>'+who+'<span>'+g.wij+' – '+g.zij+'</span></li>';
+    }).join('');
+  }
+  function esc(s){ return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function renderHist(){
+    var h=$('hist');
+    if(!hist.length){ h.innerHTML='<div class="empty">Nog geen opgeslagen wedstrijden.</div>'; return; }
+    h.innerHTML=hist.map(function(m,i){
+      var r=m.wij>m.zij?['w','Winst']:m.wij<m.zij?['v','Verlies']:['g','Gelijk'];
+      var d=m.date? m.date.split('-').reverse().join('-') : '';
+      return '<div class="hitem"><div><div class="t">'+esc(m.opp||'Onbekend')+'<span class="res '+r[0]+'">'+r[1]+'</span></div><div class="d">'+d+'</div></div>'+
+        '<div class="s">'+m.wij+' – '+m.zij+'</div><button class="x" data-del="'+i+'" aria-label="Verwijder">✕</button></div>';
+    }).join('');
+  }
+
+  // ---- scherm aan houden ----
+  var lock=null;
+  function wake(){
+    try{ if('wakeLock' in navigator && !lock){
+      navigator.wakeLock.request('screen').then(function(l){ lock=l; l.addEventListener('release',function(){lock=null;}); }).catch(function(){});
+    } }catch(e){}
+  }
+  document.addEventListener('visibilitychange',function(){
+    if(document.visibilityState==='visible'){ if(S.running) wake(); tick(); }
+  });
+
+  // ---- modals ----
+  function open(id){ $(id).classList.add('on'); }
+  function close(id){ $(id).classList.remove('on'); }
+  document.querySelectorAll('[data-close]').forEach(function(b){ b.addEventListener('click',function(){ b.closest('.modal').classList.remove('on'); }); });
+  document.querySelectorAll('.modal').forEach(function(m){ m.addEventListener('click',function(e){ if(e.target===m) m.classList.remove('on'); }); });
+
+  // ---- events ----
+  $('startstop').addEventListener('click',startStop);
+  $('skip').addEventListener('click',skip);
+  $('adj').addEventListener('click',function(){ open('mAdj'); });
+  document.querySelectorAll('[data-adj]').forEach(function(b){ b.addEventListener('click',function(){ adjust(parseInt(b.dataset.adj,10)); }); });
+  document.querySelectorAll('[data-add]').forEach(function(b){ b.addEventListener('click',function(){ addGoal(b.dataset.add); }); });
+  document.querySelectorAll('[data-sub]').forEach(function(b){ b.addEventListener('click',function(){ subGoal(b.dataset.sub); }); });
+
+  $('save').addEventListener('click',function(){
+    $('saveScore').textContent=S.wij+' – '+S.zij;
+    var d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
+    $('dt').value=d.toISOString().slice(0,10);
+    open('mSave');
+  });
+  $('doSave').addEventListener('click',function(){
+    hist.unshift({opp:$('opp').value.trim(), date:$('dt').value, wij:S.wij, zij:S.zij, goals:S.goals});
+    store(KEY_HIST,hist); $('opp').value=''; close('mSave');
+    S=fresh(); persist(); render(); renderHist(); showTab('hist');
+  });
+  $('reset').addEventListener('click',function(){ open('mReset'); });
+  $('doReset').addEventListener('click',function(){ S=fresh(); persist(); render(); close('mReset'); });
+  $('hist').addEventListener('click',function(e){
+    var i=e.target.getAttribute&&e.target.getAttribute('data-del');
+    if(i!==null && i!==undefined && confirm('Deze wedstrijd verwijderen?')){ hist.splice(parseInt(i,10),1); store(KEY_HIST,hist); renderHist(); }
+  });
+
+  function showTab(t){
+    document.querySelectorAll('.tab').forEach(function(b){ b.classList.toggle('on',b.dataset.tab===t); });
+    $('v-match').classList.toggle('on',t==='match');
+    $('v-hist').classList.toggle('on',t==='hist');
+    if(t==='hist') renderHist();
+  }
+  document.querySelectorAll('.tab').forEach(function(b){ b.addEventListener('click',function(){ showTab(b.dataset.tab); }); });
+
+  // klok bijwerken; direct verwerken als de tijd tijdens vergrendeld scherm is verlopen
+  render(); renderHist();
+  if(S.running){ wake(); if(Date.now()>=S.endAt) phaseEnded(); }
+  setInterval(tick,250);
+
+  if('serviceWorker' in navigator){ window.addEventListener('load',function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
+})();
+</script>
+</body>
+</html>
